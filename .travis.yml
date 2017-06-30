@@ -1,0 +1,26 @@
+sudo: false
+language: go
+services:
+- docker
+go:
+- 1.8.x
+install:
+- go get github.com/Masterminds/glide
+before_script:
+- glide install
+- docker run --rm -v ${PWD}/proto:/src:rw calico/protoc --gogofaster_out=. felixbackend.proto
+script:
+- mv $GOPATH/src/github.com/laincloud $GOPATH/src/github.com/projectcalico
+- go build -o bin/calico-felix felix.go
+after_success:
+- xz -9k bin/calico-felix
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: Nl8ryyUKTrqJkRi2P6uf6RitH3FYYATZIinFkqke9/KittOeyk3jWPDCRXsNOczcnnPTia7jngkU3uGgJF1ClRC2/ToBwl5UavleRaoT8Cm4HRSSRW3pP5cvyuOR4xAM2SDVxxQwBlutSok3P0NRZx2pWXMGxHDSwAJ5FEfURXrTDFXOftn4S1dN+HQf73hBau6I8ckKCUYb/vocDonQKg+ieKt/BPtZiGhzWfffwOIU0QhNcat7HuwJBWh7IH5YdC3q3+brnz6KsUCEyQ0N3hCz+wQ1V8tukphGdiHTEoAUq56zFNTZw5lJ4i4qKBGfrE9k2qGtp3d5X1E96uSwC6/PIE+tr97pi+13CRE1Ck1uwBv0+sJBVZ2BDg5vNUoz//h6J7WXOWLdkK+B0eS75HmegWrG7rthxeVZ5pgTjkmhHEt64FEyfoAziMn/kdprGkOjhrhrFAsz2nELxvhhPwU649Ko+dwoc0io0vG+jSc4qBDB71CymCYUJ3sbe3A/QKTDYF4fy6hPdZfL5PVpsZAhS0P0MJeqqk2GHoFLJ9oWjVOlRrDjqFBbgdgqaeJ4QU2wq7fRNLmRXQD19wJfwADFv1P1jEX3yUu84OB+M58KqsB23r2si5jICb98oKxA45ZH1AIZiW9O/kQ3leXM6nf5MifjH3AcAlDfuDKRwJM=
+  file:
+  - bin/calico-felix
+  - bin/calico-felix.xz
+  on:
+    tags: true
